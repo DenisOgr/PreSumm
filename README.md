@@ -161,3 +161,16 @@ python train.py  -task abs -mode train -bert_data_path BERT_DATA_PATH -dec_dropo
 * `MODEL_PATH` is the directory of saved checkpoints
 * use `-mode valiadte` with `-test_all`, the system will load all saved checkpoints and select the top ones to generate summaries (this will take a while)
 
+### Cusmon commands
+#### Split by shard:
+Store raw datasets (one line - one example) likes: `train_src.txt` and `train_tgt.txt`
+```bash
+./src/preprocess.py -mode make_shard -raw_path ..... -save_path ...
+```
+####Preprocessing from str to BERT format
+Using `-mode str_to_bert`   and `-pretrained_model_type bert-base-multilingual-uncased` (vocab for tokinizer, same as wile train.py) while `preprocessing.py`:
+```
+./src/preprocess.py -mode str_to_bert -pretrained_model_type bert-base-multilingual-uncased -raw_path ..... -save_path ...
+```
+
+

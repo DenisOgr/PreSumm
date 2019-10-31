@@ -21,9 +21,12 @@ from others.utils import clean
 from prepro.utils import _get_word_ngrams
 
 import xml.etree.ElementTree as ET
+from nltk.tokenize import word_tokenize, sent_tokenize
+import nltk
+nltk.download('punkt')
 
 nyt_remove_words = ["photo", "graph", "chart", "map", "table", "drawing"]
-
+from models import pretrained_model_types
 
 def recover_from_corenlp(s):
     s = re.sub(r' \'{\w}', '\'\g<1>', s)
@@ -35,7 +38,7 @@ def load_json(p, lower):
     source = []
     tgt = []
     flag = False
-    for sent in json.load(open(p))['sentences']:
+    for sent in json.load(open(p, encoding='utf-8'))['sentences']:
         tokens = [t['word'] for t in sent['tokens']]
         if (lower):
             tokens = [t.lower() for t in tokens]
@@ -160,7 +163,7 @@ def cal_rouge(evaluated_ngrams, reference_ngrams):
 
 def greedy_selection(doc_sent_list, abstract_sent_list, summary_size):
     def _rouge_clean(s):
-        return re.sub(r'[^a-zA-Z0-9 ]', '', s)
+        return re.sub(r'[^а-яА-Яa-zA-Z0-9 ]', '', s)
 
     max_rouge = 0.0
     abstract = sum(abstract_sent_list, [])
@@ -207,14 +210,21 @@ def hashhex(s):
 class BertData():
     def __init__(self, args):
         self.args = args
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+        if args.pretrained_model_type in ['bert-base-uncased', 'bert-base-multilingual-uncased']:
+            self.tokenizer = BertTokenizer.from_pretrained(args.pretrained_model_type, do_lower_case=True)
 
+        if not self.tokenizer:
+            raise NotImplementedError("self.tokenizer")
         self.sep_token = '[SEP]'
         self.cls_token = '[CLS]'
         self.pad_token = '[PAD]'
         self.tgt_bos = '[unused0]'
         self.tgt_eos = '[unused1]'
         self.tgt_sent_split = '[unused2]'
+
+        self.tokenizer.add_to_vocab(self.tgt_bos)
+        self.tokenizer.add_to_vocab(self.tgt_eos)
+
         self.sep_vid = self.tokenizer.vocab[self.sep_token]
         self.cls_vid = self.tokenizer.vocab[self.cls_token]
         self.pad_vid = self.tokenizer.vocab[self.pad_token]
@@ -301,12 +311,82 @@ def _format_to_bert(params):
     bert = BertData(args)
 
     logger.info('Processing %s' % json_file)
-    jobs = json.load(open(json_file))
+    jobs = json.load(open(json_file, encoding='utf-8'))
     datasets = []
     for d in jobs:
         source, tgt = d['src'], d['tgt']
 
         sent_labels = greedy_selection(source[:args.max_src_nsents], tgt, 3)
+        if (args.lower):
+            source = [' '.join(s).lower().split() for s in source]
+            tgt = [' '.join(s).lower().split() for s in tgt]
+        b_data = bert.preprocess(source, tgt, sent_labels, use_bert_basic_tokenizer=args.use_bert_basic_tokenizer,
+                                 is_test=is_test)
+        # b_data = bert.preprocess(source, tgt, sent_labels, use_bert_basic_tokenizer=args.use_bert_basic_tokenizer)
+
+        if (b_data is None):
+            continue
+        src_subtoken_idxs, sent_labels, tgt_subtoken_idxs, segments_ids, cls_ids, src_txt, tgt_txt = b_data
+        b_data_dict = {"src": src_subtoken_idxs, "tgt": tgt_subtoken_idxs,
+                       "src_sent_labels": sent_labels, "segs": segments_ids, 'clss': cls_ids,
+                       'src_txt': src_txt, "tgt_txt": tgt_txt}
+        datasets.append(b_data_dict)
+    logger.info('Processed instances %d' % len(datasets))
+    logger.info('Saving to %s' % save_file)
+    torch.save(datasets, save_file)
+    datasets = []
+    gc.collect()
+
+
+def str_to_bert(args):
+    assert args.pretrained_model_type in pretrained_model_types
+    logger.info("Run with pretrained_model_type: " + args.pretrained_model_type)
+    if (args.dataset != ''):
+        datasets = [args.dataset]
+    else:
+        datasets = ['train', 'valid', 'test']
+    for corpus_type in datasets:
+        a_lst = []
+        for origin_src in glob.glob(args.raw_path+'.'+corpus_type + '.src.*.txt'):
+            number_shard = origin_src.split('.')[-2]
+            origin_tgt = args.raw_path + '.' +corpus_type+'.tgt.'+number_shard+'.txt'
+            save_name = args.save_path + '.'+corpus_type +'.'+number_shard+'.bert.pt'
+            assert os.path.exists(origin_tgt), "Invalid origin_tgt: "+origin_tgt
+            a_lst.append((corpus_type, origin_src, args, save_name, origin_tgt))
+        print(a_lst)
+
+        pool = Pool(args.n_cpus)
+        for d in pool.imap(_str_to_bert, a_lst):
+            pass
+
+        pool.close()
+        pool.join()
+
+def _str_to_bert(params):
+    corpus_type, origin_src, args, save_file, origin_tgt = params
+    is_test = corpus_type == 'test'
+    if (os.path.exists(save_file)):
+        logger.info('Ignore %s' % save_file)
+        return
+
+
+    bert = BertData(args)
+
+    logger.info('Processing %s' % origin_src)
+    f_src = open(origin_src, encoding='utf-8')
+    f_tgt = open(origin_tgt, encoding='utf-8')
+    datasets = []
+    while True:
+        line_src = f_src.readline()
+        line_tgt = f_tgt.readline()
+        if not line_src or not line_tgt:
+            break
+        source = [word_tokenize(s, language="russian") for s in sent_tokenize(line_src, language="russian")]
+        tgt = [word_tokenize(s, language="russian") for s in sent_tokenize(line_tgt, language="russian")]
+
+        sent_labels = greedy_selection(source[:args.max_src_nsents], tgt, 3)
+        if not sent_labels:
+            logger.warn("Empty sent_labels")
         if (args.lower):
             source = [' '.join(s).lower().split() for s in source]
             tgt = [' '.join(s).lower().split() for s in tgt]
@@ -437,3 +517,50 @@ def _format_xsum_to_lines(params):
             tgt.append(sent.split())
         return {'src': source, 'tgt': tgt}
     return None
+
+def make_shard(args):
+    logger.info('Starting making shards....')
+    assert os.path.exists(os.path.dirname(args.raw_path)), "Invalid args.raw_path"
+    assert os.path.exists(os.path.dirname(args.save_path)), "Invalid args.save_path"
+    assert args.shard_size > 0, "Invalid shard_size"
+    files = [('train_src.txt', 'train_tgt.txt'), ('valid_src.txt', 'valid_tgt.txt')]
+    for file_pair in files:
+        for f in file_pair:
+            assert os.path.exists(pjoin(args.raw_path, f)), "Invalid file: " + f
+
+
+    for file_pair in files:
+        number_shard = 0
+        src = pjoin(args.raw_path, file_pair[0])
+        tgt = pjoin(args.raw_path, file_pair[1])
+        with(open(src,'r',encoding='utf-8')) as f_src:
+            with(open(tgt, 'r', encoding='utf-8')) as f_tgt:
+                logger.info("Read source: "+ src)
+                logger.info("Read source: "+ tgt)
+                while True:
+                    lines_src = []
+                    lines_tgt = []
+                    for _ in range(args.shard_size):
+                        line_src = f_src.readline()
+                        line_tgt = f_tgt.readline()
+                        if not line_src or not line_tgt:
+                            break
+                        lines_src.append(line_src)
+                        lines_tgt.append(line_tgt)
+                    if lines_src and lines_tgt:
+                        logger.info("Store shard with size: %s" % len(lines_src))
+                        dataset = file_pair[0].replace('_src.txt', "")
+                        src_shard = args.save_path + ".%s.src.%s.txt" % (dataset, number_shard)
+                        tgt_shard = args.save_path + ".%s.tgt.%s.txt" % (dataset, number_shard)
+
+                        with(open(src_shard, 'w', encoding='utf-8')) as t_src:
+                            t_src.writelines(lines_src)
+                        logger.info("Stored shard #%s"%src_shard)
+                        with(open(tgt_shard, 'w', encoding='utf-8')) as t_src:
+                            t_src.writelines(lines_tgt)
+                        logger.info("Stored shard #%s" % tgt_shard)
+                        number_shard = number_shard + 1
+                    else:
+                        break
+
+

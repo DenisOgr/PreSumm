@@ -61,7 +61,6 @@ def load_vocab(vocab_file):
             index += 1
     return vocab
 
-
 def whitespace_tokenize(text):
     """Runs basic whitespace cleaning and splitting on a peice of text."""
     text = text.strip()
@@ -83,12 +82,20 @@ class BertTokenizer(object):
                 "model use `tokenizer = BertTokenizer.from_pretrained(PRETRAINED_MODEL_NAME)`".format(vocab_file))
         self.do_lower_case = do_lower_case
         self.vocab = load_vocab(vocab_file)
+
         self.ids_to_tokens = collections.OrderedDict(
             [(ids, tok) for tok, ids in self.vocab.items()])
         self.basic_tokenizer = BasicTokenizer(do_lower_case=do_lower_case,
                                               never_split=never_split)
+
         self.wordpiece_tokenizer = WordpieceTokenizer(vocab=self.vocab)
         self.max_len = max_len if max_len is not None else int(1e12)
+
+    def add_to_vocab(self, value):
+        try:
+            self.vocab[value]
+        except KeyError:
+            self.vocab[value] = len(self.vocab)
 
     def tokenize(self, text, use_bert_basic_tokenizer=False):
         split_tokens = []

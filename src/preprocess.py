@@ -66,7 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('-dataset', default='')
 
     parser.add_argument('-n_cpus', default=2, type=int)
-
+    parser.add_argument("-pretrained_model_type", default='bert-base-uncased', type=str)
 
     args = parser.parse_args()
     init_logger(args.log_file)
