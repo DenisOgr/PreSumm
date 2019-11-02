@@ -6,6 +6,8 @@ from __future__ import division
 
 import argparse
 import os
+
+from models import pretrained_model_types
 from others.logging import init_logger
 from train_abstractive import validate_abs, train_abs, baseline, test_abs, test_text_abs
 from train_extractive import train_ext, validate_ext, test_ext
@@ -108,6 +110,8 @@ if __name__ == '__main__':
     parser.add_argument("-report_rouge", type=str2bool, nargs='?',const=True,default=True)
     parser.add_argument("-block_trigram", type=str2bool, nargs='?', const=True, default=True)
 
+    parser.add_argument("-pretrained_model_type", default='bert-base-uncased', type=str)
+
     args = parser.parse_args()
     args.gpu_ranks = [int(i) for i in range(len(args.visible_gpus.split(',')))]
     args.world_size = len(args.gpu_ranks)
@@ -116,6 +120,8 @@ if __name__ == '__main__':
     init_logger(args.log_file)
     device = "cpu" if args.visible_gpus == '-1' else "cuda"
     device_id = 0 if device == "cuda" else -1
+
+    assert args.pretrained_model_type in pretrained_model_types
 
     if (args.task == 'abs'):
         if (args.mode == 'train'):
