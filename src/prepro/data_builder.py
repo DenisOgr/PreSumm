@@ -549,7 +549,7 @@ def make_shard(args):
                         lines_tgt.append(line_tgt)
                     if lines_src and lines_tgt:
                         logger.info("Store shard with size: %s" % len(lines_src))
-                        dataset = file_pair[0].replace('_src.txt', "")
+                        dataset = file_pair[0].replace('_src.txt', "").replace('_src.bpe', "")
                         src_shard = args.save_path + ".%s.src.%s.txt" % (dataset, number_shard)
                         tgt_shard = args.save_path + ".%s.tgt.%s.txt" % (dataset, number_shard)
 

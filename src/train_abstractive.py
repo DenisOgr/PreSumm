@@ -23,8 +23,19 @@ from models.predictor import build_predictor
 from models.trainer import build_trainer
 from others.logging import logger, init_logger
 
+from prepro.data_builder import BertData
+
 model_flags = ['hidden_size', 'ff_size', 'heads', 'emb_size', 'enc_layers', 'enc_hidden_size', 'enc_ff_size',
                'dec_layers', 'dec_hidden_size', 'dec_ff_size', 'encoder', 'ff_actv', 'use_interval']
+
+
+def add_to_vocab(tokenizer, tokens):
+    for token in tokens:
+        try:
+            tokenizer.vocab[token]
+        except KeyError:
+            tokenizer.vocab[token] = len(tokenizer.vocab)
+    return tokenizer
 
 
 def str2bool(v):
@@ -186,7 +197,16 @@ def validate(args, device_id, pt, step):
                                         args.batch_size, device,
                                         shuffle=False, is_test=False)
 
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True, cache_dir=args.temp_dir)
+    tokenizer = BertData(args).tokenizer
+    #tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True, cache_dir=args.temp_dir)
+    # tokenizer= None
+    # if args.pretrained_model_type in ['bert-base-uncased', 'bert-base-multilingual-uncased']:
+    #     tokenizer = BertTokenizer.from_pretrained(args.pretrained_model_type, do_lower_case=True, cache_dir=args.temp_dir)
+    #
+    # if not tokenizer:
+    #     raise NotImplementedError("tokenizer")
+
+    tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
     symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
 
@@ -218,7 +238,18 @@ def test_abs(args, device_id, pt, step):
     test_iter = data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False),
                                        args.test_batch_size, device,
                                        shuffle=False, is_test=True)
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True, cache_dir=args.temp_dir)
+
+    tokenizer = BertData(args).tokenizer
+
+    #tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True, cache_dir=args.temp_dir)
+    # tokenizer = None
+    # if args.pretrained_model_type in ['bert-base-uncased', 'bert-base-multilingual-uncased']:
+    #     tokenizer = BertTokenizer.from_pretrained(args.pretrained_model_type, do_lower_case=True, cache_dir=args.temp_dir)
+    #
+    # if not tokenizer:
+    #     raise NotImplementedError("tokenizer")
+
+    tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
     symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
     predictor = build_predictor(args, tokenizer, symbols, model, logger)
@@ -246,7 +277,17 @@ def test_text_abs(args, device_id, pt, step):
     test_iter = data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False),
                                        args.test_batch_size, device,
                                        shuffle=False, is_test=True)
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True, cache_dir=args.temp_dir)
+    tokenizer = BertData(args).tokenizer
+
+    #tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True, cache_dir=args.temp_dir)
+    # tokenizer = None
+    # if args.pretrained_model_type in ['bert-base-uncased', 'bert-base-multilingual-uncased']:
+    #     tokenizer = BertTokenizer.from_pretrained(args.pretrained_model_type, do_lower_case=True, cache_dir=args.temp_dir)
+    #
+    # if not tokenizer:
+    #     raise NotImplementedError("tokenizer")
+
+    tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
     symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
     predictor = build_predictor(args, tokenizer, symbols, model, logger)
@@ -322,7 +363,17 @@ def train_abs_single(args, device_id):
 
     logger.info(model)
 
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True, cache_dir=args.temp_dir)
+    tokenizer = BertData(args).tokenizer
+
+    #tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True, cache_dir=args.temp_dir)
+    # tokenizer = None
+    # if args.pretrained_model_type in ['bert-base-uncased', 'bert-base-multilingual-uncased']:
+    #     tokenizer = BertTokenizer.from_pretrained(args.pretrained_model_type, do_lower_case=True, cache_dir=args.temp_dir)
+    #
+    # if not tokenizer:
+    #     raise NotImplementedError("tokenizer")
+
+    tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]','[unused2]'])
     symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
 
