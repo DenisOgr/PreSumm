@@ -523,7 +523,7 @@ def make_shard(args):
     assert os.path.exists(os.path.dirname(args.raw_path)), "Invalid args.raw_path"
     assert os.path.exists(os.path.dirname(args.save_path)), "Invalid args.save_path"
     assert args.shard_size > 0, "Invalid shard_size"
-    files = [('train_src.txt', 'train_tgt.txt'), ('valid_src.txt', 'valid_tgt.txt')]
+    files = [('train_src.txt', 'train_tgt.txt'), ('valid_src.txt', 'valid_tgt.txt'),('test_src.txt', 'test_tgt.txt')]
     for file_pair in files:
         for f in file_pair:
             assert os.path.exists(pjoin(args.raw_path, f)), "Invalid file: " + f

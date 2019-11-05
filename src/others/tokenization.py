@@ -96,6 +96,8 @@ class BertTokenizer(object):
             self.vocab[value]
         except KeyError:
             self.vocab[value] = len(self.vocab)
+            self.ids_to_tokens = collections.OrderedDict(
+                [(ids, tok) for tok, ids in self.vocab.items()])
 
     def tokenize(self, text, use_bert_basic_tokenizer=False):
         split_tokens = []

@@ -5,3 +5,4 @@ pytorch-transformers==1.2.0
 tensorboardX==1.9
 torch==1.1.0
 nltk
+rouge==0.3.2

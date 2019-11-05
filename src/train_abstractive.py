@@ -206,7 +206,7 @@ def validate(args, device_id, pt, step):
     # if not tokenizer:
     #     raise NotImplementedError("tokenizer")
 
-    tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
+    #tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
     symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
 
@@ -249,7 +249,7 @@ def test_abs(args, device_id, pt, step):
     # if not tokenizer:
     #     raise NotImplementedError("tokenizer")
 
-    tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
+   # tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
     symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
     predictor = build_predictor(args, tokenizer, symbols, model, logger)
@@ -287,7 +287,7 @@ def test_text_abs(args, device_id, pt, step):
     # if not tokenizer:
     #     raise NotImplementedError("tokenizer")
 
-    tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
+   # tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
     symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
     predictor = build_predictor(args, tokenizer, symbols, model, logger)
@@ -299,7 +299,7 @@ def baseline(args, cal_lead=False, cal_oracle=False):
                                        args.batch_size, 'cpu',
                                        shuffle=False, is_test=True)
 
-    trainer = build_trainer(args, '-1', None, None, None)
+    trainer = build_trainer(args, -1, None, None, None)
     #
     if (cal_lead):
         trainer.test(test_iter, 0, cal_lead=True)
@@ -373,7 +373,7 @@ def train_abs_single(args, device_id):
     # if not tokenizer:
     #     raise NotImplementedError("tokenizer")
 
-    tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]','[unused2]'])
+    #tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]','[unused2]'])
     symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
 
