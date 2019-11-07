@@ -15,6 +15,7 @@ from multiprocess import Pool
 
 from others.logging import logger
 from others.tokenization import BertTokenizer
+from transformers import BertTokenizer as BertTokenizerOrigin
 from pytorch_transformers import XLNetTokenizer
 
 from others.utils import clean
@@ -27,6 +28,7 @@ nltk.download('punkt')
 
 nyt_remove_words = ["photo", "graph", "chart", "map", "table", "drawing"]
 from models import pretrained_model_types
+from other_models.map import mapper
 
 def recover_from_corenlp(s):
     s = re.sub(r' \'{\w}', '\'\g<1>', s)
@@ -210,11 +212,6 @@ def hashhex(s):
 class BertData():
     def __init__(self, args):
         self.args = args
-        if args.pretrained_model_type in ['bert-base-uncased', 'bert-base-multilingual-uncased']:
-            self.tokenizer = BertTokenizer.from_pretrained(args.pretrained_model_type, do_lower_case=True)
-
-        if not self.tokenizer:
-            raise NotImplementedError("self.tokenizer")
         self.sep_token = '[SEP]'
         self.cls_token = '[CLS]'
         self.pad_token = '[PAD]'
@@ -222,12 +219,23 @@ class BertData():
         self.tgt_eos = '[unused1]'
         self.tgt_sent_split = '[unused2]'
 
-        self.tokenizer.add_to_vocab(self.tgt_bos)
-        self.tokenizer.add_to_vocab(self.tgt_eos)
 
-        self.sep_vid = self.tokenizer.vocab[self.sep_token]
-        self.cls_vid = self.tokenizer.vocab[self.cls_token]
-        self.pad_vid = self.tokenizer.vocab[self.pad_token]
+        if args.pretrained_model_type in ['bert-base-uncased', 'bert-base-multilingual-uncased']:
+            self.tokenizer = BertTokenizerOrigin.from_pretrained(args.pretrained_model_type, do_lower_case=True)
+
+        if args.pretrained_model_type in ['rubert-deeppavlov']:
+            name = args.pretrained_model_type
+            vocab_path = mapper(name, 'vocab')
+            self.tokenizer = BertTokenizerOrigin.from_pretrained(vocab_path, do_lower_case=True)
+
+
+        if not self.tokenizer:
+            raise NotImplementedError("self.tokenizer")
+
+        self.tokenizer.add_tokens([self.tgt_bos])
+        self.sep_vid = self.tokenizer.convert_tokens_to_ids(self.sep_token)
+        self.cls_vid = self.tokenizer.convert_tokens_to_ids(self.cls_token)
+        self.pad_vid = self.tokenizer.convert_tokens_to_ids(self.pad_token)
 
     def preprocess(self, src, tgt, sent_labels, use_bert_basic_tokenizer=False, is_test=False):
 
@@ -269,7 +277,7 @@ class BertData():
         sent_labels = sent_labels[:len(cls_ids)]
 
         tgt_subtokens_str = '[unused0] ' + ' [unused2] '.join(
-            [' '.join(self.tokenizer.tokenize(' '.join(tt), use_bert_basic_tokenizer=use_bert_basic_tokenizer)) for tt in tgt]) + ' [unused1]'
+            [' '.join(self.tokenizer.tokenize(' '.join(tt))) for tt in tgt]) + ' [unused1]'
         tgt_subtoken = tgt_subtokens_str.split()[:self.args.max_tgt_ntokens]
         if ((not is_test) and len(tgt_subtoken) < self.args.min_tgt_ntokens):
             return None

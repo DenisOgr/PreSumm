@@ -172,5 +172,21 @@ Using `-mode str_to_bert`   and `-pretrained_model_type bert-base-multilingual-u
 ```
 ./src/preprocess.py -mode str_to_bert -pretrained_model_type bert-base-multilingual-uncased -raw_path ..... -save_path ...
 ```
+How to use RuBERT deeppvlov
+```bash
+cd ./experiments && git clone git@github.com:vlarine/transformers-ru.git
+cd ../other_models/rubert_deeppavlov && \
+wget 'http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz' && \
+tar -xzf rubert_cased_L-12_H-768_A-12_v1.tar.gz
+```
+convert from TF to PyTorch
+```bash
+python3 ./experiments/transformers-ru/convert_tf_checkpoint_to_pytorch.py \
+    --tf_checkpoint_path "./other_models/rubert_cased_L-12_H-768_A-12_v1/bert_model.ckpt.index" \
+    --bert_config_file "./other_models/rubert_cased_L-12_H-768_A-12_v1/bert_config.json" \
+    --pytorch_dump_path "./other_models/rubert_deeppavlov/bert_model.bin"
+```
+
+Run `str_to_bert`, `train` with arg: `-pretrained_model_type rubert-deeppavlov`
 
 

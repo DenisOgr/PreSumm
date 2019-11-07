@@ -1,1 +1,1 @@
-pretrained_model_types=['bert-base-uncased', 'bert-base-multilingual-uncased', 'RuBERT', 'SlavicBERT','Russian RuBERTa']
+pretrained_model_types=['bert-base-uncased', 'bert-base-multilingual-uncased', 'rubert-deeppavlov', 'SlavicBERT','Russian RuBERTa']

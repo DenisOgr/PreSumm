@@ -28,16 +28,6 @@ from prepro.data_builder import BertData
 model_flags = ['hidden_size', 'ff_size', 'heads', 'emb_size', 'enc_layers', 'enc_hidden_size', 'enc_ff_size',
                'dec_layers', 'dec_hidden_size', 'dec_ff_size', 'encoder', 'ff_actv', 'use_interval']
 
-
-def add_to_vocab(tokenizer, tokens):
-    for token in tokens:
-        try:
-            tokenizer.vocab[token]
-        except KeyError:
-            tokenizer.vocab[token] = len(tokenizer.vocab)
-    return tokenizer
-
-
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
@@ -207,8 +197,8 @@ def validate(args, device_id, pt, step):
     #     raise NotImplementedError("tokenizer")
 
     #tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
-    symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
-               'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
+    symbols = {'BOS': tokenizer.convert_tokens_to_ids('[unused0]'), 'EOS': tokenizer.convert_tokens_to_ids('[unused1]'),
+               'PAD': tokenizer.convert_tokens_to_ids('[PAD]'), 'EOQ': tokenizer.convert_tokens_to_ids('[unused2]')}
 
     valid_loss = abs_loss(model.generator, symbols, model.vocab_size, train=False, device=device)
 
@@ -250,8 +240,8 @@ def test_abs(args, device_id, pt, step):
     #     raise NotImplementedError("tokenizer")
 
    # tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
-    symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
-               'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
+    symbols = {'BOS': tokenizer.convert_tokens_to_ids('[unused0]'), 'EOS': tokenizer.convert_tokens_to_ids('[unused1]'),
+               'PAD': tokenizer.convert_tokens_to_ids('[PAD]'), 'EOQ': tokenizer.convert_tokens_to_ids('[unused2]')}
     predictor = build_predictor(args, tokenizer, symbols, model, logger)
     predictor.translate(test_iter, step)
 
@@ -288,8 +278,8 @@ def test_text_abs(args, device_id, pt, step):
     #     raise NotImplementedError("tokenizer")
 
    # tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]', '[unused2]'])
-    symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
-               'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
+    symbols = {'BOS': tokenizer.convert_tokens_to_ids('[unused0]'), 'EOS': tokenizer.convert_tokens_to_ids('[unused1]'),
+               'PAD': tokenizer.convert_tokens_to_ids('[PAD]'), 'EOQ': tokenizer.convert_tokens_to_ids('[unused2]')}
     predictor = build_predictor(args, tokenizer, symbols, model, logger)
     predictor.translate(test_iter, step)
 
@@ -374,8 +364,8 @@ def train_abs_single(args, device_id):
     #     raise NotImplementedError("tokenizer")
 
     #tokenizer = add_to_vocab(tokenizer, ['[unused0]', '[unused1]', '[PAD]','[unused2]'])
-    symbols = {'BOS': tokenizer.vocab['[unused0]'], 'EOS': tokenizer.vocab['[unused1]'],
-               'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused2]']}
+    symbols = {'BOS': tokenizer.convert_tokens_to_ids('[unused0]'), 'EOS': tokenizer.convert_tokens_to_ids('[unused1]'),
+               'PAD': tokenizer.convert_tokens_to_ids('[PAD]'), 'EOQ': tokenizer.convert_tokens_to_ids('[unused2]')}
 
     train_loss = abs_loss(model.generator, symbols, model.vocab_size, device, train=True,
                           label_smoothing=args.label_smoothing)

@@ -10,6 +10,7 @@ from models.encoder import Classifier, ExtTransformerEncoder
 from models.optimizers import Optimizer
 
 from prepro.data_builder import  BertData
+from other_models.map import mapper
 
 def build_optim(args, model, checkpoint):
     """ Build optimizer """
@@ -120,12 +121,16 @@ class Bert(nn.Module):
         super(Bert, self).__init__()
         if args.pretrained_model_type in ['bert-base-uncased', 'bert-base-multilingual-uncased']:
             self.model = BertModel.from_pretrained(args.pretrained_model_type, cache_dir=temp_dir)
+        if args.pretrained_model_type in ['rubert-deeppavlov']:
+            name = args.pretrained_model_type
+            config = BertConfig.from_json_file(mapper(name, 'config'))
+            self.model = BertModel.from_pretrained(mapper(name, 'model'), config=config)
 
         if not self.model:
             raise NotImplementedError("self.model")
 
         bert_data = BertData(args)
-        self.model.resize_token_embeddings(len(bert_data.tokenizer.vocab))
+        self.model.resize_token_embeddings(len(bert_data.tokenizer))
         self.finetune = finetune
 
     def forward(self, x, segs, mask):
