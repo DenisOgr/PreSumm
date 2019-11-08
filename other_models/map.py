@@ -1,5 +1,7 @@
 from os.path import join as pjoin
-MAIN_PATH = '/Users/denisporplenko/Documents/UCU_master_degree/diploma/raw/PreSumm/other_models/'
+from os import environ
+assert environ.get('PATH_TO_ROOT'), 'Empty enviroment variable ENV. Please set up it: export PATH_TO_ROOT=/path/to/root'
+print('PATH_TO_ROOT: %s'%environ.get('PATH_TO_ROOT'))
 
 _MAP = {
     'rubert-deeppavlov': {
@@ -10,4 +12,4 @@ _MAP = {
 }
 
 def mapper(name, type):
-    return pjoin(MAIN_PATH, _MAP[name][type])
+    return pjoin(environ.get('PATH_TO_ROOT'), _MAP[name][type])
