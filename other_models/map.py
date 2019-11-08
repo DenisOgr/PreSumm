@@ -5,9 +5,9 @@ print('PATH_TO_ROOT: %s'%environ.get('PATH_TO_ROOT'))
 
 _MAP = {
     'rubert-deeppavlov': {
-        'model': "rubert_deeppavlov/rubert_cased_L-12_H-768_A-12_v1/pt_bert_model.bin",
-        'config': "rubert_deeppavlov/rubert_cased_L-12_H-768_A-12_v1/bert_config.json",
-        'vocab': 'rubert_deeppavlov/rubert_cased_L-12_H-768_A-12_v1/vocab.txt'
+        'model': "other_models/rubert_deeppavlov/rubert_cased_L-12_H-768_A-12_v1/pt_bert_model.bin",
+        'config': "other_models/rubert_deeppavlov/rubert_cased_L-12_H-768_A-12_v1/bert_config.json",
+        'vocab': "other_models/rubert_deeppavlov/rubert_cased_L-12_H-768_A-12_v1/vocab.txt"
     }
 }
 
