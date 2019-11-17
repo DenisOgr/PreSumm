@@ -70,7 +70,7 @@ class Translator(object):
         self.beam_trace = self.dump_beam != ""
         self.beam_accum = None
 
-        tensorboard_log_dir = args.model_path
+        tensorboard_log_dir = args.model_path + '/valid_test'
 
         self.tensorboard_writer = SummaryWriter(tensorboard_log_dir, comment="Unmt")
 
@@ -172,10 +172,11 @@ class Translator(object):
                         # pred_str = ' '.join(pred_str.split()[:len(gold_str.split())])
                     # self.raw_can_out_file.write(' '.join(pred).strip() + '\n')
                     # self.raw_gold_out_file.write(' '.join(gold).strip() + '\n')
-                    self.can_out_file.write(pred_str + '\n')
-                    self.gold_out_file.write(gold_str + '\n')
-                    self.src_out_file.write(src.strip() + '\n')
-                    ct += 1
+                    if len(pred_str) > 10 or len(gold_str) > 10 or len(src) > 10:
+                        self.can_out_file.write(pred_str + '\n')
+                        self.gold_out_file.write(gold_str + '\n')
+                        self.src_out_file.write(src.strip() + '\n')
+                        ct += 1
                 self.can_out_file.flush()
                 self.gold_out_file.flush()
                 self.src_out_file.flush()
@@ -191,6 +192,7 @@ class Translator(object):
                 self.tensorboard_writer.add_scalar('test/rouge1-F', rouges['rouge-1']['f'], step)
                 self.tensorboard_writer.add_scalar('test/rouge2-F', rouges['rouge-2']['f'], step)
                 self.tensorboard_writer.add_scalar('test/rougeL-F', rouges['rouge-l']['f'], step)
+                self.tensorboard_writer.flush()
 
     def _report_rouge(self, gold_path, can_path):
         self.logger.info("Calculating Rouge")

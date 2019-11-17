@@ -22,6 +22,7 @@ from models.model_builder import AbsSummarizer
 from models.predictor import build_predictor
 from models.trainer import build_trainer
 from others.logging import logger, init_logger
+from tensorboardX import SummaryWriter
 
 from prepro.data_builder import BertData
 
@@ -120,16 +121,20 @@ class ErrorHandler(object):
 
 def validate_abs(args, device_id):
     timestep = 0
+    tensorboard_writer = SummaryWriter(args.model_path + '/valid_test', comment="Unmt")
     if (args.test_all):
         cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
         cp_files.sort(key=os.path.getmtime)
         xent_lst = []
         for i, cp in enumerate(cp_files):
+            logger.info('validate:  %s'%cp)
             step = int(cp.split('.')[-2].split('_')[-1])
             if (args.test_start_from != -1 and step < args.test_start_from):
                 xent_lst.append((1e6, cp))
                 continue
             xent = validate(args, device_id, cp, step)
+            tensorboard_writer.add_scalar('valid/xent', xent, step)
+            tensorboard_writer.flush()
             xent_lst.append((xent, cp))
             max_step = xent_lst.index(min(xent_lst))
             if (i - max_step > 10):
@@ -138,6 +143,7 @@ def validate_abs(args, device_id):
         logger.info('PPL %s' % str(xent_lst))
         for xent, cp in xent_lst:
             step = int(cp.split('.')[-2].split('_')[-1])
+            logger.info('test:  %s' % cp)
             test_abs(args, device_id, cp, step)
     else:
         while (True):
