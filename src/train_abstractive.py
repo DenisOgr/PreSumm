@@ -158,7 +158,9 @@ def validate_abs(args, device_id):
                 if (time_of_cp > timestep):
                     timestep = time_of_cp
                     step = int(cp.split('.')[-2].split('_')[-1])
-                    validate(args, device_id, cp, step)
+                    xent = validate(args, device_id, cp, step)
+                    tensorboard_writer.add_scalar('valid/xent', xent, step)
+                    tensorboard_writer.flush()
                     test_abs(args, device_id, cp, step)
 
             cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
